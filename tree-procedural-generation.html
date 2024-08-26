@@ -18,6 +18,60 @@
         <p>
             A simple procedural generation algorithm to create something resembling a tree or a bush.
         </p>
+
+        <p>
+            I'm always fascinated by procedural generation, so this is my simple take on it. It dras a tree from individual circles, growing on one another, and generates it branch by branch.
+        </p>
+
+        <div class="centered">
+            <img src="images/tree-gif-1.gif" alt="Apparently, GIF isn't here :(" />
+        </div>
+
+        <p>
+            Here are the settings:
+        </p>
+
+        <div class="centered">
+            <iframe
+              src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=%2523%2523%2523%2520Config%253A%2520%2523%2523%2523%250AdefaultRadius%2520%253D%252020%250AradiusDecay%2520%253D%25200.95%2520%2523Multiplier%2520for%2520the%2520radius%2520of%2520the%2520child%250AchanceOfBranching%2520%253D%25200.05%2520%2523Probability%2520that%2520a%2520new%2520branch%2520is%2520created%2520VS%2520the%2520current%2520one%2520is%2520continued%250AbranchCurveness%2520%253D%25200.5%250Aangle%2520%253D%2520random.uniform%28math.pi*0.1%252C%2520math.pi*0.9%29%2520%2523Angle%2520at%2520which%2520a%2520new%2520circle%2520will%2520be%2520drawn"
+              style="width: 976px; height: 298px; border:0; transform: scale(1); overflow:hidden;"
+              sandbox="allow-scripts allow-same-origin">
+            </iframe>
+        </div>
+
+        <p>
+            We can tweak them a bit to get another result:
+        </p>
+
+        <div class="centered">
+            <img src="images/tree-gif-2.gif" alt="Apparently, GIF isn't here :(" />
+        </div>
+
+        <p>
+            New settings:
+        </p>
+
+        <div class="centered">
+            <iframe
+              src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=%2523%2523%2523%2520Config%253A%2520%2523%2523%2523%250AdefaultRadius%2520%253D%252020%250AradiusDecay%2520%253D%25200.85%2520%2523Multiplier%2520for%2520the%2520radius%2520of%2520the%2520child%250AchanceOfBranching%2520%253D%25200.2%2520%2523Probability%2520that%2520a%2520new%2520branch%2520is%2520created%2520VS%2520the%2520current%2520one%2520is%2520continued%250AbranchCurveness%2520%253D%25200.7%250Aangle%2520%253D%2520random.uniform%28math.pi*0.1%252C%2520math.pi*0.9%29%2520%2523Angle%2520at%2520which%2520a%2520new%2520circle%2520will%2520be%2520drawn"
+              style="width: 968px; height: 298px; border:0; transform: scale(1); overflow:hidden;"
+              sandbox="allow-scripts allow-same-origin">
+            </iframe>
+        </div>
+
+        <p>
+            The main part of the algorithm, which is then rendered using pygame:
+        </p>
+
+        <div class="centered">
+                    <iframe
+                      src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=%2523%2523%2523%2520Config%253A%2520%2523%2523%2523%250AdefaultRadius%2520%253D%252020%250AradiusDecay%2520%253D%25200.95%2520%2523Multiplier%2520for%2520the%2520radius%2520of%2520the%2520child%250AchanceOfBranching%2520%253D%25200.05%2520%2523Probability%2520that%2520a%2520new%2520branch%2520is%2520created%2520VS%2520the%2520current%2520one%2520is%2520continued%250AbranchCurveness%2520%253D%25200.5%250Aangle%2520%253D%2520random.uniform%28math.pi*0.1%252C%2520math.pi*0.9%29%2520%2523Angle%2520at%2520which%2520a%2520new%2520circle%2520will%2520be%2520drawn%250A%250Acircles%2520%253D%2520%255B%255D%250AfirstCircleIsDrawn%2520%253D%2520False%250A%250Aclass%2520circle%253A%250A%2520%2520%2520%2520def%2520__init__%28self%252C%2520x%252C%2520y%252C%2520radius%29%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520self.x%2520%253D%2520x%250A%2520%2520%2520%2520%2520%2520%2520%2520self.y%2520%253D%2520y%250A%2520%2520%2520%2520%2520%2520%2520%2520self.radius%2520%253D%2520radius%250A%2520%2520%2520%2520%2520%2520%2520%2520self.color%2520%253D%2520white%250A%2520%2520%2520%2520%2520%2520%2520%2520self.children%2520%253D%2520%255B%255D%250A%250A%2520%2520%2520%2520def%2520draw%28self%29%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520pygame.draw.circle%28screen%252C%2520self.color%252C%2520%28self.x%252C%2520self.y%29%252C%2520self.radius%29%250A%250A%250Adef%2520draw_first_circle%28%29%253A%250A%2520%2520%2520%2520global%2520firstCircleIsDrawn%250A%250A%2520%2520%2520%2520if%2520len%28circles%29%2520%253D%253D%25200%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520firstCircleIsDrawn%2520%253D%2520False%250A%250A%2520%2520%2520%2520if%2520not%2520firstCircleIsDrawn%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520firstCircleIsDrawn%2520%253D%2520True%250A%2520%2520%2520%2520%2520%2520%2520%2520circles.append%28circle%28screen_width%252F%252F2%252C%2520screen_height-defaultRadius*2%252C%2520defaultRadius%29%29%250A%2520%2520%2520%2520%2520%2520%2520%2520circles%255B0%255D.draw%28%29%250A%250Adef%2520choose_parent_circle%28%29%253A%250A%2520%2520%2520%2520global%2520chanceOfBranching%250A%2520%2520%2520%2520global%2520lengthOfBranch%250A%2520%2520%2520%2520global%2520angle%250A%250A%2520%2520%2520%2520chance%2520%253D%2520random.random%28%29%250A%250A%2520%2520%2520%2520if%2520chance%2520%253E%2520chanceOfBranching%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520chosenCircle%2520%253D%2520circles%255B-1%255D%250A%2520%2520%2520%2520else%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520chosenCircle%2520%253D%2520random.choice%28circles%29%250A%2520%2520%2520%2520%2520%2520%2520%2520angle%2520%253D%2520random.uniform%28math.pi*0.1%252C%2520math.pi*0.9%29%2520%250A%250A%2520%2520%2520%2520return%2520chosenCircle%250A%250Adef%2520new_circle%28%29%253A%250A%2520%2520%2520%2520global%2520radiusDecay%250A%2520%2520%2520%2520global%2520angle%250A%2520%2520%2520%2520global%2520branchCurveness%250A%250A%2520%2520%2520%2520chosenCircle%2520%253D%2520choose_parent_circle%28%29%250A%250A%2520%2520%2520%2520newRadius%2520%253D%2520chosenCircle.radius*radiusDecay%250A%250A%2520%2520%2520%2520angle%2520%252B%253D%2520random.normalvariate%280%252C%2520%280.45%2520-%2520abs%28angle-math.pi*0.5%29%29*branchCurveness%29%250A%2520%2520%2520%2520%250A%2520%2520%2520%2520newX%2520%253D%2520chosenCircle.x%2520%252B%2520%28newRadius%252BchosenCircle.radius%29%2520*%2520math.cos%28angle%29%250A%2520%2520%2520%2520newY%2520%253D%2520chosenCircle.y%2520-%2520%28newRadius%252BchosenCircle.radius%29%2520*%2520math.sin%28angle%29%250A%250A%2520%2520%2520%2520newCircle%2520%253D%2520circle%28newX%252C%2520newY%252C%2520newRadius%29%250A%2520%2520%2520%2520circles.append%28newCircle%29%250A%2520%2520%2520%2520chosenCircle.children.append%28len%28circles%29%29%250A%250Adef%2520draw_circles%28%29%253A%250A%2520%2520%2520%2520for%2520circle%2520in%2520circles%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520circle.draw%28%29%250A%250Adef%2520run_propagating_circles%28%29%253A%250A%2520%2520%2520%2520draw_first_circle%28%29%250A%2520%2520%2520%2520new_circle%28%29%250A%2520%2520%2520%2520draw_circles%28%29"
+                      style="width: 976px; height: 1564px; border:0; transform: scale(1); overflow:hidden;"
+                      sandbox="allow-scripts allow-same-origin">
+                    </iframe>            
+        </div>
+
+    
     </div>
 
 

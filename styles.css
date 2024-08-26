@@ -7,6 +7,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center; /* Center horizontally */
+    gap: 40px;
     min-height: 100vh; /* Ensure body takes up full viewport height */
 }
 
@@ -46,6 +47,14 @@ a:hover, a:focus, a:active {
     max-width: 940px;
     width: 100%; /* Ensure container is responsive */
     box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    text-align: center; /* Center text within the block elements */
 }
 
 .container.gallery {
