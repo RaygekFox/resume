@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate Axes with Arrows</title>
+    <style>
+        body {
+            background-color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #menu {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            width: 200px;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .slider-container {
+            margin-bottom: 20px;
+        }
+        .label-span {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <div class="slider-container">
+            <label for="x-slider">x:</label>
+            <input type="range" id="x-slider" min="0" max="5" step="0.1" value="0">
+            <span id="x-value" class="label-span">0</span>
+        </div>
+        <div class="slider-container">
+            <label for="b-slider">b:</label>
+            <input type="range" id="b-slider" min="0" max="5" step="0.1" value="0">
+            <span id="b-value" class="label-span">0</span>
+        </div>
+        <div>
+            <label for="k-counter">k:</label>
+            <button onclick="changeK(-1)">-</button>
+            <span id="k-value" class="label-span">1</span>
+            <button onclick="changeK(1)">+</button>
+        </div>
+        <div>
+            <label for="line-checkbox">Line:</label>
+            <input type="checkbox" id="line-checkbox">
+        </div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const xSlider = document.getElementById('x-slider');
+        const bSlider = document.getElementById('b-slider');
+        const xValueSpan = document.getElementById('x-value');
+        const bValueSpan = document.getElementById('b-value');
+        const kValueSpan = document.getElementById('k-value');
+        const lineCheckbox = document.getElementById('line-checkbox');
+
+        let kValue = 1;
+
+        function changeK(delta) {
+            kValue += delta;
+            kValueSpan.textContent = kValue;
+            draw();
+        }
+
+        function drawArrow(fromX, fromY, toX, toY, color, width = 4, shadow = true) {
+            const thickerWidth = width * 1.5;
+
+            if (shadow) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = thickerWidth;
+                ctx.globalAlpha = 0.25;
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+
+            // Draw the circle at the end
+            if (shadow) {
+                ctx.globalAlpha = 0.25;
+                ctx.beginPath();
+                ctx.arc(toX, toY, thickerWidth, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            ctx.beginPath();
+            ctx.arc(toX, toY, width, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawAxes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw X axis
+            drawArrow(50, canvas.height / 2, canvas.width - 50, canvas.height / 2, 'black', 2, false);
+            ctx.fillText('x', canvas.width - 60, canvas.height / 2 - 10);
+
+            // Draw Y axis
+            drawArrow(50, canvas.height - 50, 50, 50, 'black', 2, false);
+            ctx.fillText('y', 40, 60);
+        }
+
+        function drawLine(startX, startY, endX, endY) {
+            ctx.strokeStyle = 'gray';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 0; // No shadow for the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        function draw() {
+            drawAxes();
+
+            const x = parseFloat(xSlider.value);
+            const b = parseFloat(bSlider.value);
+
+            xValueSpan.textContent = x.toFixed(1);
+            bValueSpan.textContent = b.toFixed(1);
+
+            const originX = 50;
+            const originY = canvas.height / 2;
+            const arrowLength = 50 * x;
+
+            // Calculate the positions of the green arrows
+            let currentX = originX + arrowLength;
+            let currentY = originY;
+            const direction = kValue > 0 ? -1 : 1;
+            const greenPositions = [];
+            for (let i = 0; i < Math.abs(kValue); i++) {
+                greenPositions.push({ x: currentX, y: currentY });
+                currentY += direction * arrowLength;
+            }
+
+            // Draw blue arrow for b value if b != 0
+            if (b !== 0) {
+                drawArrow(currentX, currentY, currentX, currentY - 50 * b, 'blue', 8);
+            }
+
+            // Draw green arrows for k value
+            for (const pos of greenPositions) {
+                drawArrow(pos.x, pos.y, pos.x, pos.y + direction * arrowLength, 'green', 8);
+            }
+
+            // Draw red arrow for x value
+            drawArrow(originX, originY, originX + arrowLength, originY, 'red', 8);
+
+            // Draw line if checkbox is checked
+            if (lineCheckbox.checked) {
+                const startY = originY - 50 * b;
+                const endY = (b !== 0) ? currentY - 50 * b : currentY;
+                drawLine(originX, startY, currentX, endY);
+            }
+        }
+
+        xSlider.addEventListener('input', draw);
+        bSlider.addEventListener('input', draw);
+        lineCheckbox.addEventListener('change', draw);
+
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Ball Grid with Higgs Field Simulation</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  #slider-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    text-align: center;
+  }
+  #container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin-top: 70px; /* Increased top margin for more space */
+  }
+  .ball {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.1s linear;
+  }
+  #interaction-title {
+    position: absolute;
+    top: -50px; /* Adjusted position for better visibility */
+    width: 100%;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="slider-container">
+  <div>Mass of particle (M)</div>
+  <input type="range" id="slider" min="0" max="1" step="0.1" value="0.5">
+  M: <span id="m-value">0.5</span>
+</div>
+<div id="container">
+  <div id="interaction-title">
+    Move mouse over to simulate interaction with the Higgs field
+  </div>
+</div>
+
+<script>
+  const container = document.getElementById('container');
+  const slider = document.getElementById('slider');
+  const mValueDisplay = document.getElementById('m-value');
+
+  // Initialize the grid of balls
+  const gridWidth = 20;
+  const ballSize = 10; // in pixels
+  const balls = [];
+  for (let i = 0; i < gridWidth; i++) {
+    for (let j = 0; j < gridWidth; j++) {
+      const ball = document.createElement('div');
+      ball.className = 'ball';
+      ball.style.left = `${i * 20}px`;
+      ball.style.top = `${j * 20}px`;
+      container.appendChild(ball);
+      balls.push({ element: ball, x: i * 20, y: j * 20 });
+    }
+  }
+
+  // Update the ball positions based on the mouse position and M value
+  function updateBalls(event) {
+    const rect = container.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const m = parseFloat(slider.value);
+    balls.forEach(ball => {
+      const dx = mouseX - ball.x;
+      const dy = mouseY - ball.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const factor = 10 / (1 + distance); // Enhanced gravitational effect
+      const newX = ball.x + m * factor * dx;
+      const newY = ball.y + m * factor * dy;
+      ball.element.style.transform = `translate(${newX - ball.x}px, ${newY - ball.y}px)`;
+    });
+  }
+
+  // Listen for mouse movement and slider changes
+  container.addEventListener('mousemove', updateBalls);
+  slider.addEventListener('input', (event) => {
+    mValueDisplay.textContent = event.target.value;
+    updateBalls(event);
+  });
+</script>
+</body>
+</html>
