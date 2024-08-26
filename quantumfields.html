@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Field Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #264653;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 18px;
+            z-index: 1000;
+        }
+        #modalContent {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #okButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background: #2A9D8F;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="modal">
+        <div id="modalContent">
+            <h2>Instructions</h2>
+            <p>Use the following controls to interact with the visualization:</p>
+            <ul>
+                <li><b>Left Mouse Click</b>: Add a particle at the mouse position.</li>
+                <li><b>Spacebar</b>: Toggle interaction mode.</li>
+                <li><b>W</b>: Toggle visibility of the white field.</li>
+                <li><b>R</b>: Toggle visibility of the red field.</li>
+                <li><b>Q</b>: Remove all particles.</li>
+            </ul>
+            <button id="okButton">OK</button>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        const whiteFieldColor = '#2A9D8F';
+        const redFieldColor = '#E76F51';
+        const ballRadius = 2;
+        const redOffset = 5;
+
+        let particles = [];
+        let particleVelocities = {};
+        let particleIdCounter = 0;
+        let virtualParticles = [];
+        let interaction = false;
+        let whiteFieldVisible = true;
+        let redFieldVisible = true;
+        const virtualParticleSpeed = 5;
+        const speedGainFactor = 0.1;
+
+        const horizontalLinesCount = 16;
+        const diagonalLinesCount = 16;
+
+        function drawGrid() {
+            // Draw horizontal lines
+            for (let i = 0; i < horizontalLinesCount; i++) {
+                let y = i * height / horizontalLinesCount;
+                for (let x = 0; x < width; x += 2 * ballRadius + 2) {
+                    if (whiteFieldVisible) {
+                        drawBall(x, y, whiteFieldColor);
+                    }
+                    if (redFieldVisible) {
+                        drawBall(x, y + redOffset, redFieldColor, false);
+                    }
+                }
+            }
+
+            // Draw diagonal lines
+            for (let i = -diagonalLinesCount; i < diagonalLinesCount; i++) {
+                let startX = i * width / diagonalLinesCount;
+                let x = startX;
+                let y = height;
+                while (x < width && y > 0) {
+                    if (whiteFieldVisible) {
+                        drawBall(x, y, whiteFieldColor);
+                    }
+                    if (redFieldVisible) {
+                        drawBall(x, y + redOffset, redFieldColor, false);
+                    }
+                    x += 2 * ballRadius + 2;
+                    y -= 2 * ballRadius + 2;
+                }
+            }
+        }
+
+        function drawBall(x, y, color, applyLift = true) {
+            let lift = 0;
+            if (applyLift) {
+                for (let particle of particles) {
+                    lift += calculateLift(particle.pos, { x, y });
+                }
+                const mousePos = getMousePos();
+                lift += calculateLift(mousePos, { x, y });
+            }
+
+            if (interaction && color === redFieldColor) {
+                for (let vp of virtualParticles) {
+                    lift += calculateLift(vp.position, { x, y });
+                }
+            }
+
+            if (color === whiteFieldColor) {
+                for (let particle of particles) {
+                    if (particle.pos.x === x && particle.pos.y === y) {
+                        let velocity = particleVelocities[particle.id] || { x: 0, y: 0 };
+                        x += velocity.x;
+                        y += velocity.y;
+                        particle.pos = { x, y };
+                        particleVelocities[particle.id] = velocity;
+                    }
+                }
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y - lift, ballRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function calculateLift(particlePos, ballPos) {
+            let dx = particlePos.x - ballPos.x;
+            let dy = particlePos.y - ballPos.y;
+            let distance = Math.hypot(dx, dy);
+            return 40 * Math.exp(-((distance / 40) ** 2));
+        }
+
+        function addVirtualParticles() {
+            if (particles.length < 2) return;
+            const [p1, p2] = getRandomPair(particles);
+            virtualParticles.push({
+                position: { ...p1.pos },
+                target: p2.pos,
+                sourceId: p1.id,
+            });
+            virtualParticles.push({
+                position: { ...p2.pos },
+                target: p1.pos,
+                sourceId: p2.id,
+            });
+        }
+
+        function updateVirtualParticles() {
+            for (let vp of virtualParticles) {
+                let dx = vp.target.x - vp.position.x;
+                let dy = vp.target.y - vp.position.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist < virtualParticleSpeed) {
+                    let sourceVelocity = particleVelocities[vp.sourceId] || { x: 0, y: 0 };
+                    sourceVelocity.x += dx / dist * virtualParticleSpeed * speedGainFactor;
+                    sourceVelocity.y += dy / dist * virtualParticleSpeed * speedGainFactor;
+                    particleVelocities[vp.sourceId] = sourceVelocity;
+                    virtualParticles = virtualParticles.filter(p => p !== vp);
+                } else {
+                    vp.position.x += dx / dist * virtualParticleSpeed;
+                    vp.position.y += dy / dist * virtualParticleSpeed;
+                }
+            }
+        }
+
+        function addParticle(pos) {
+            const particleId = particleIdCounter++;
+            particles.push({ id: particleId, pos });
+            particleVelocities[particleId] = { x: 0, y: 0 };
+        }
+
+        function updateParticles() {
+            for (let particle of particles) {
+                let velocity = particleVelocities[particle.id] || { x: 0, y: 0 };
+                particle.pos.x += velocity.x;
+                particle.pos.y += velocity.y;
+            }
+        }
+
+        function removeAllParticles() {
+            particles = [];
+            particleVelocities = {};
+            virtualParticles = [];
+        }
+
+        function getMousePos() {
+            return { x: mouseX, y: mouseY };
+        }
+
+        function getRandomPair(arr) {
+            const index1 = Math.floor(Math.random() * arr.length);
+            let index2;
+            do {
+                index2 = Math.floor(Math.random() * arr.length);
+            } while (index1 === index2);
+            return [arr[index1], arr[index2]];
+        }
+
+        let mouseX = 0, mouseY = 0;
+
+        canvas.addEventListener('mousemove', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousedown', function (event) {
+            if (event.button === 0) {
+                addParticle({ x: mouseX, y: mouseY });
+            }
+        });
+
+        window.addEventListener('keydown', function (event) {
+            if (event.key === ' ') {
+                interaction = !interaction;
+            } else if (event.key === 'w') {
+                whiteFieldVisible = !whiteFieldVisible;
+            } else if (event.key === 'r') {
+                redFieldVisible = !redFieldVisible;
+            } else if (event.key === 'q') {
+                removeAllParticles();
+            }
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            drawGrid();
+            updateParticles();
+            if (interaction) {
+                if (virtualParticles.length === 0) {
+                    addVirtualParticles();
+                }
+                updateVirtualParticles();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        document.getElementById('okButton').addEventListener('click', function () {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        animate();
+    </script>
+</body>
+</html>
