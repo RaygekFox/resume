@@ -55,6 +55,7 @@ a:hover, a:focus, a:active {
     align-items: center; /* Center content horizontally */
     justify-content: center; /* Center content vertically */
     text-align: center; /* Center text within the block elements */
+    gap: 40px;
 }
 
 .container.gallery {
