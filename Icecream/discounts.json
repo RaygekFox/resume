@@ -1,0 +1,17 @@
+{
+    "discounts": {
+        "10": 5,
+        "20": 10,
+        "50": 20,
+        "100": 30,
+        "200": 50
+    },
+    "colors": {
+        "background": "#FFFACD",
+        "modalBackground": "#ffd1e0",
+        "modalBorder": "#c000de",
+        "buttonBackground": "#c000de",
+        "buttonHover": "#a000b0",
+        "towerHeightText": "#ffffff"  // Color for the tower height text
+    }
+}

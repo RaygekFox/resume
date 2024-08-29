@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Cream Game</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #FFFACD;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .cone {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 200px;
+            background-image: url('cone.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            transition: bottom 0.3s;
+            z-index: 5; /* Ensure the cone is above the scoops */
+        }
+
+        .scoop {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-image: url('scoop_vanilla.png');
+            background-size: cover;
+            border-radius: 50%;
+            transition: top 0.1s, left 0.1s;
+            z-index: 3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;  /* Make the modal 80% of the screen width */
+            background-color: #ffd1e0;  /* Set the background color */
+            padding: 20px;
+            border: 5px solid #c000de;  /* 5px border with the specified color */
+            border-radius: 10px;  /* Rounded corners */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);  /* Drop shadow for the modal */
+            z-index: 10;
+            text-align: center;  /* Center the text */
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal h1,
+        .modal p {
+            margin: 10px 0;  /* Adjust spacing */
+            font-size: 1.5em;  /* Increase the text size */
+        }
+
+        .modal button {
+            display: block;
+            margin: 20px auto 0 auto;  /* Center the button horizontally */
+            padding: 10px 20px;
+            background-color: #c000de;  /* Button background color */
+            color: white;  /* Button text color */
+            border: none;
+            border-radius: 5px;  /* Rounded corners for the button */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  /* Drop shadow for the button */
+            font-size: 1.2em;  /* Increase the button text size */
+            cursor: pointer;
+        }
+
+        .modal button:hover {
+            background-color: #a000b0;  /* Slightly darker shade for hover effect */
+        }
+
+        
+        #towerHeight {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgb(255, 255, 235); /* Lighter than the background */
+            font-size: 50vh;
+            font-weight: bold;
+            transition: font-size 0.3s;
+            user-select: none; /* Prevents text selection */
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div class="cone" id="cone"></div>
+    </div>
+    <div class="modal" id="gameOverModal">
+        <h1>Game Over!</h1>
+        <p>You missed the last scoop!</p>
+        <button onclick="location.reload()">Try Again</button>
+    </div>
+    <div id="towerHeight">0</div>
+
+
+    <script>
+
+        let settings = {}; // To store the settings from the JSON file
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('settings.json');
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                settings = await response.json(); // Parse the JSON data into the settings object
+                console.log("Settings loaded:", settings);
+                applySettings(); // Apply the settings to the game
+                gameStart(); // Start the game only after settings are loaded and applied
+            } catch (error) {
+                console.error("Failed to load settings:", error);
+                settings = {}; // Fallback to an empty object or set default values
+                gameStart(); // Start the game even if settings failed to load
+            }
+        }
+
+        function applySettings() {
+            // Apply background color
+            document.body.style.backgroundColor = settings.colors.background;
+
+            // Apply modal colors
+            const modal = document.querySelector('.modal');
+            modal.style.backgroundColor = settings.colors.modalBackground;
+            modal.style.borderColor = settings.colors.modalBorder;
+
+            // Apply button colors
+            const button = document.querySelector('.modal button');
+            button.style.backgroundColor = settings.colors.buttonBackground;
+            button.addEventListener('mouseover', () => {
+                button.style.backgroundColor = settings.colors.buttonHover;
+            });
+            button.addEventListener('mouseout', () => {
+                button.style.backgroundColor = settings.colors.buttonBackground;
+            });
+
+            // Apply tower height text color
+            const towerHeightElement = document.getElementById('towerHeight');
+            towerHeightElement.style.color = settings.colors.towerHeightText;
+        }
+
+        // Load the settings when the script loads
+        loadSettings();
+
+
+
+
+        let isGameOver = false; // Flag to track if the game is over
+
+
+        const scoopImages = [
+            'scoops/scoop_vanilla.png',
+            'scoops/scoop_strawberry.png',
+            'scoops/scoop_mint.png',
+            'scoops/scoop_chocolate.png'
+        ];
+
+        class Scoop {
+            constructor(x, y, diameter, imagePath, isFlying = true, isFalling = false, isStick = false) {
+                this.isFlying = isFlying;
+                this.isFalling = isFalling;
+                this.isStick = isStick;
+                this.willStick = false;  // New property to indicate if the scoop will stick
+                this.diameter = diameter;
+                this.x = x;
+                this.y = y;
+                this.targetHeight = 0; // New property to store the calculated height for landing
+                this.element = document.createElement('div');
+                this.element.classList.add('scoop');
+                this.element.style.backgroundImage = `url('${imagePath}')`;
+                this.element.style.width = `${this.diameter}px`;
+                this.element.style.height = `${this.diameter}px`;
+                this.updatePosition();
+                document.getElementById('gameArea').appendChild(this.element);
+            }
+
+            updatePosition() {
+                this.element.style.left = `${this.x}px`;
+                this.element.style.top = `${this.y}px`;
+            }
+
+
+            fall() {
+                if (this.isFalling) {
+                    this.y += verticalSpeed;
+                    if (this.willStick && this.y >= this.targetHeight) {
+                        this.isFalling = false;
+                        this.isStick = true;
+                        adjustConeHeight(this);
+                        lastScoop = this;  // Set the current scoop as the last scoop after it sticks
+                        spawnNewScoop();  // Spawn a new scoop
+                    } else if (this.y > gameArea.offsetHeight - this.diameter) {
+                        triggerGameLost(); // Trigger game over if the scoop falls off the screen
+                    }
+                    this.updatePosition();
+                }
+            }
+
+
+            fly() {
+                if (this.isFlying) {
+                    this.x += horizontalSpeed * (movingRight ? 1 : -1);
+                    if (this.x + this.diameter >= gameArea.offsetWidth || this.x <= 0) {
+                        movingRight = !movingRight;
+                    }
+                    this.updatePosition();
+                }
+            }
+        }
+
+        const gameArea = document.getElementById('gameArea');
+        const cone = document.getElementById('cone');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        const diameter = 80;
+        let verticalSpeed = 10;
+        let horizontalSpeed = 2;
+        let movingRight = true;
+        let scoops = [];
+        let lastScoop;
+
+        function gameStart() {
+            const initialImage = scoopImages[Math.floor(Math.random() * scoopImages.length)];
+            const initialScoop = new Scoop(
+                gameArea.offsetWidth / 2 - diameter / 2,
+                gameArea.offsetHeight - diameter,
+                diameter,
+                initialImage,
+                false,
+                false,
+                true
+            );
+
+            const firstImage = scoopImages[Math.floor(Math.random() * scoopImages.length)];
+            const firstScoop = new Scoop(diameter / 2, diameter / 2, diameter, firstImage);
+
+            scoops.push(initialScoop);
+            scoops.push(firstScoop);
+            lastScoop = initialScoop;
+
+            // Calculate cone position
+            cone.style.bottom = `${(diameter * 0.5) - cone.offsetHeight}px`;
+
+            // Set the initial content of the tower height element
+            const towerHeightElement = document.getElementById('towerHeight');
+            towerHeightElement.textContent = towerHeight;
+
+            gameArea.addEventListener('click', onClick);
+
+            gameLoop();
+            
+        }
+
+
+
+        let interval;
+
+        function gameLoop() {
+            interval = setInterval(() => {
+                if (isGameOver) {
+                    clearInterval(interval); // Stop the game loop if the game is over
+                    return;
+                }
+
+                const elementsToUpdate = [];
+                scoops.forEach((scoop) => {
+                    if (scoop.isFlying || scoop.isFalling) {
+                        scoop.fall();
+                        scoop.fly();
+                        elementsToUpdate.push(scoop);
+                    }
+                });
+
+                // Batch DOM updates
+                elementsToUpdate.forEach((scoop) => scoop.updatePosition());
+            }, 16); // Update every 16 milliseconds (about 60 frames per second)
+        }
+
+
+
+        function onClick() {
+            scoops.forEach((scoop) => {
+                if (scoop.isFlying) {
+                    // Calculate future collision check
+                    const xDifference = Math.abs(scoop.x - lastScoop.x);
+                    if (xDifference < diameter) {
+                        scoop.willStick = true;
+                        scoop.targetHeight =
+                            lastScoop.y -
+                            Math.sqrt(diameter ** 2 - xDifference ** 2);
+                    } else {
+                        scoop.willStick = false;
+                    }
+                    scoop.isFlying = false;
+                    scoop.isFalling = true;
+                }
+            });
+        }
+
+        let towerHeight = 1;
+
+        function adjustConeHeight(newScoop) {
+            const yDifference = newScoop.y - lastScoop.y; // Calculate the exact distance the scoops need to move down
+            scoops.forEach((s) => {
+                s.y -= yDifference; // Move all scoops down by this difference
+                s.updatePosition();
+            });
+
+            // Move the cone down by the same distance
+            const currentConeBottom = parseFloat(cone.style.bottom) || 0; // Get current bottom value
+            cone.style.bottom = `${currentConeBottom + yDifference}px`; // Adjust cone's position
+
+            // Increment the tower height
+            towerHeight++;
+            const towerHeightElement = document.getElementById('towerHeight');
+            towerHeightElement.textContent = towerHeight;
+
+            // Apply the animation effect
+            towerHeightElement.style.fontSize = '60vh';
+            setTimeout(() => {
+                towerHeightElement.style.fontSize = '50vh';
+            }, 300);
+        }
+
+
+        function spawnNewScoop() {
+            const randomImage = scoopImages[Math.floor(Math.random() * scoopImages.length)];
+            const newScoop = new Scoop(diameter / 2, diameter / 2, diameter, randomImage);
+            scoops.push(newScoop);
+            horizontalSpeed += 0.1; // Slightly increase speed for difficulty
+        }
+
+        function triggerGameLost() {
+            console.log("triggerGameLost is called");
+
+            if (!isGameOver) {  // Ensure the game over logic only runs once
+                isGameOver = true; // Set the game over flag to true
+                gameLost(); // Trigger the game lost logic
+                clearInterval(interval); // Ensure the game loop is stopped immediately
+            }
+        }
+
+
+        function gameLost() {
+            console.log("gameLost is called");
+            console.log(gameOverModal);
+
+            const discount = getDiscount(towerHeight);
+            gameOverModal.innerHTML = `
+                <h1>Great!</h1>
+                <p>Your ice cream tower is ${towerHeight} scoops high!</p>
+                <p>You get ${discount}% discount!</p>
+                <p>Show this message at the counter.</p>
+                <button onclick="location.reload()">Try Again</button>
+            `;
+            gameOverModal.classList.add('show');
+            gameArea.removeEventListener('click', onClick); // Disable furt her clicks
+        }
+
+        function getDiscount(towerHeight) {
+            let discount = 0;
+            for (const [height, percentage] of Object.entries(settings.discounts)) {
+                if (towerHeight >= Number(height)) {  // Convert height to a number
+                    discount = percentage;
+                } else {
+                    break;
+                }
+            }
+            return discount;
+        }
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>
