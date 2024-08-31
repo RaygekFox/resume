@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Toha's place</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>Simple Evolution Algorithm</h1>
+    </header>
+
+
+    <div class="container">
+        
+        <p>
+            This was a simple illustration of evolution algorithms for the course on AI I teach. Its goal is for the balls to figure out the correct timing of jumps to jump over three obstacles. Basically, it's just a guessing game -- it has no neural networks or anything.
+        </p>
+
+        <p>
+            The hole process of learning in 51 generations in low framerate:
+        </p>
+
+        <div class="centered">
+            <img src="images/evolution-jumping-gif-1.gif" alt="A gif should have been here :(">
+        </div>
+
+        <p>
+            The last several generations in high framerate:
+        </p>
+
+        <div class="centered">
+            <img src="images/evolution-jumping-gif-2.gif" alt="A gif should have been here :(">
+        </div>
+
+        <p>
+            The algorithm can be configured with the following parameters:
+        </p>
+
+        <div class="centered">
+            <iframe
+              src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=%2523Configuration%253A%250ANumberOfSurvivors%2520%253D%25205%250ANumberOfCopies%2520%253D%252020%250AStrenfthOfMutation%2520%253D%2520100"
+              style="width: 352px; height: 260px; border:0; transform: scale(1); overflow:hidden;"
+              sandbox="allow-scripts allow-same-origin">
+            </iframe>
+        </div>
+
+        <p>
+            The main part of the algorithm is very simple: a ball has three coordinates at which it will jump, randomly chosen during initialization:
+        </p>        
+
+        <div class="centered">
+            <iframe
+              src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=class%2520ball%253A%250A%2520%2520%2520%2520def%2520__init__%28self%252C%2520x%252C%2520y%252C%2520radius%29%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520self.x%2520%253D%2520x%250A%2520%2520%2520%2520%2520%2520%2520%2520self.y%2520%253D%2520y%250A%2520%2520%2520%2520%2520%2520%2520%2520self.radius%2520%253D%2520radius%250A%2520%2520%2520%2520%2520%2520%2520%2520self.color%2520%253D%2520%28random.randint%28100%252C%2520200%29%252C%2520random.randint%28100%252C%2520200%29%252C%2520random.randint%28100%252C%2520200%29%29%250A%2520%2520%2520%2520%2520%2520%2520%2520self.jumps%2520%253D%2520%255Brandom.randint%280%252C80%29%2520*%252010%252C%2520random.randint%280%252C80%29%2520*%252010%252C%2520random.randint%280%252C80%29%2520*%252010%255D%250A%2520%2520%2520%2520%2520%2520%2520%2520self.isAlive%2520%253D%2520True%250A%2520%2520%2520%2520%2520%2520%2520%2520self.score%2520%253D%25200"
+              style="width: 1010px; height: 354px; border:0; transform: scale(1); overflow:hidden;"
+              sandbox="allow-scripts allow-same-origin">
+            </iframe>
+        </div>
+
+        <p>
+            Then, when copies of the best performing balls are created, their jump positions mutate using normal distribution with a standard deviation equal to strengthOfMutation:
+        </p>        
+
+        <div class="centered">
+            <iframe
+              src="https://carbon.now.sh/embed?bg=rgba%28244%2C244%2C244%2C1%29&t=blackboard&wt=none&l=python&width=680&ds=true&dsyoff=5px&dsblur=9px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=def%2520mutate_jumps%28balls%252Cs%29%253A%250A%2520%2520%2520%2520for%2520ball%2520in%2520balls%253A%250A%2520%2520%2520%2520%2520%2520%2520%2520ball.jumps%2520%253D%2520%255Babs%28int%28round%28np.random.normal%28ball.jumps%255B0%255D%252C%2520s%29%252F10%29*10%29%29%252C%2520%250A%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520abs%28int%28round%28np.random.normal%28ball.jumps%255B1%255D%252C%2520s%29%252F10%29*10%29%29%252C%2520%250A%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520%2520abs%28int%28round%28np.random.normal%28ball.jumps%255B2%255D%252C%2520s%29%252F10%29*10%29%29%252C%255D"
+              style="width: 833px; height: 279px; border:0; transform: scale(1); overflow:hidden;"
+              sandbox="allow-scripts allow-same-origin">
+            </iframe>
+
+            <a href="https://github.com/RaygekFox/Evolution-algorithms" target="_blank">
+                <img src="images/see-on-github.png">
+            </a>
+        </div>
+
+    
+    </div>
+
+
+
+</body>
+</html>
