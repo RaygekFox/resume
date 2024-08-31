@@ -35,37 +35,40 @@ h3 {
 }
 a {
     text-decoration: none;
-    color: inherit; /* Inherits the color from the parent element (h3) */
+    color: inherit; 
 }
 
 a:hover, a:focus, a:active {
-    text-decoration: none; /* Ensures the underline doesn't appear on hover or focus */
-    color: inherit; /* Ensures the color doesn't change on hover or focus */
+    text-decoration: none; 
+    color: inherit; 
 }
 
 .container {
     max-width: 940px;
-    width: 100%; /* Ensure container is responsive */
-    box-sizing: border-box; /* Ensure padding doesn't affect width */
+    width: 100%; 
+    box-sizing: border-box; 
+    align-items: center;
 }
 
 .centered {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center content horizontally */
-    justify-content: center; /* Center content vertically */
-    text-align: center; /* Center text within the block elements */
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
     gap: 40px;
 }
 
 .container.gallery {
     display: flex;   
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: left;
+    align-items: left;
+
 }
 .project-card {
     position: relative; /* Set relative positioning for the card container */
-    width: 250px;
+    width: 240px;
     height: 150px;   
     margin: 15px;
     padding: 15px;
@@ -76,6 +79,8 @@ a:hover, a:focus, a:active {
     justify-content: center; /* Center the content (h3) horizontally and vertically */
     overflow: hidden; /* Ensure any overflow is hidden */
     text-align: center; /* Center the text */
+    border-radius: 10px;
+    border: 2px solid #444;
 }
 .project-card img {
     position: absolute;
