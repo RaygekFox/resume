@@ -92,6 +92,22 @@ a:hover, a:focus, a:active {
     z-index: 1; /* Place the image behind the content */
 }
 
+.back-home-btn {
+    width: auto;
+    height: auto;
+    padding: 10px;
+    background-color: #161032;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.back-home-btn:hover {
+    color: #E06D06; 
+}
+
 footer {
     background-color: #333;
     color: white;
