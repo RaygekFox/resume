@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Toha's place</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+
+
+<body>
+
+    <header>
+        <h1>Rockets learn to fly with evolution algorithm</h1>
+    </header>
+
+    <a href="index.html" class="back-home-btn">Back to home</a>
+
+    <div class="container">
+
+        <p>
+            Here I made a bunch of rockets learning to fly around a planet with a very simpified physics.
+        </p>
+
+        <div class="centered">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/agqJM5mlKtQ" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+
+        <p>
+            A rocket's behavior is defined by a small neural network:
+        </p>
+
+        <p>
+            The first layer takes rocket's height, absolute angle, and velocity's components as input. Then we have two
+            hidden layers with 4 nodes each and the output layer, deciding whether the rocket will turn the engine on or
+            off, and how much it should turn.
+        </p>
+
+        <p>
+            Initial weights are random and then evolve to maximize the time the rocket spends in the air.
+        </p>
+
+        <p>
+            In the top right of the screen you can see the network of the current best rocket.
+        </p>
+
+        <p>
+            Surprisingly, rockets learnt to orbit the planet quite fast initially, so I added constant air friction, to
+            slow them down, but also they have a slow fuel regen to make things a bit more challenging.
+        </p>
+
+        <p>
+            Whenever the rocket is orange, it means its engine is on and it has some fuel left.
+        </p>
+
+        <div class="centered">
+            <a href="https://github.com/RaygekFox/Evolution-algorithms" target="_blank">
+                <img src="images/see-on-github.png">
+            </a>
+        </div>
+
+
+
+
+
+
+
+
+    </div>
+
+</body>
+
+</html>
